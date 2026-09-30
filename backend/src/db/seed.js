@@ -1,0 +1,247 @@
+import { db, initDatabase } from './database.js';
+
+initDatabase();
+
+console.log('🌱 Seeding database...');
+
+// Seed Users
+const users = [
+  {
+    id: 'USR-001',
+    name: 'Ananya Soren',
+    email: 'ananya@jharkhand.gov.in',
+    role: 'Citizen',
+    district: 'Khunti'
+  },
+  {
+    id: 'USR-002',
+    name: 'Rajesh Kumar Verma',
+    email: 'officer@jharkhand.gov.in',
+    role: 'Revenue Officer',
+    district: 'Khunti'
+  }
+];
+
+// Seed Parcels
+const parcels = [
+  {
+    ulpin: 'JH-22-1048-0021',
+    owner: 'Ananya Soren',
+    area: '2.50',
+    landType: 'Agricultural',
+    location: 'Ranchi, Jharkhand',
+    risk: 'Low',
+    status: 'Verified',
+    currentUse: 'Agriculture',
+    surveyNumber: '12/4',
+    registeredValue: '₹25,00,000',
+    riskScores: { overall: 24, document: 20, ownership: 15, mutation: 10, transaction: 10, encroachment: 10 },
+    ownershipHistory: [
+      { owner: 'Budhram Soren', year: 1998, event: 'Original Grant' },
+      { owner: 'Somra Soren', year: 2012, event: 'Succession' },
+      { owner: 'Ananya Soren', year: 2022, event: 'Mutation Approval' }
+    ]
+  },
+  {
+    ulpin: 'JH-22-1048-0022',
+    owner: 'Vikram Singh',
+    area: '1.80',
+    landType: 'Commercial',
+    location: 'Khunti, Jharkhand',
+    risk: 'Medium',
+    status: 'Pending Mutation',
+    currentUse: 'Commercial Store',
+    surveyNumber: '88/2',
+    registeredValue: '₹48,00,000',
+    riskScores: { overall: 48, document: 40, ownership: 35, mutation: 30, transaction: 25, encroachment: 20 },
+    ownershipHistory: [
+      { owner: 'Ramesh Singh', year: 2005, event: 'Registered Sale Deed' },
+      { owner: 'Vikram Singh', year: 2024, event: 'Sale Agreement' }
+    ]
+  },
+  {
+    ulpin: 'JH-22-1048-0023',
+    owner: 'Meera Toppo',
+    area: '3.16',
+    landType: 'Residential',
+    location: 'Ranchi, Jharkhand',
+    risk: 'High',
+    status: 'Under Review',
+    currentUse: 'Residential',
+    surveyNumber: '44/7',
+    registeredValue: '₹62,00,000',
+    riskScores: { overall: 72, document: 70, ownership: 65, mutation: 60, transaction: 55, encroachment: 50 },
+    ownershipHistory: [
+      { owner: 'Kalyan Toppo', year: 2001, event: 'Inheritance' },
+      { owner: 'Meera Toppo', year: 2025, event: 'Partition Deed' }
+    ]
+  },
+  {
+    ulpin: 'JH-22-1048-0024',
+    owner: 'Deepak Munda',
+    area: '4.25',
+    landType: 'Agricultural',
+    location: 'Khunti, Jharkhand',
+    risk: 'Low',
+    status: 'Verified',
+    currentUse: 'Crop Cultivation',
+    surveyNumber: '102/1',
+    registeredValue: '₹38,00,000',
+    riskScores: { overall: 18, document: 15, ownership: 10, mutation: 10, transaction: 10, encroachment: 5 },
+    ownershipHistory: [
+      { owner: 'Sukhdeo Munda', year: 1995, event: 'Survey Settlement' },
+      { owner: 'Deepak Munda', year: 2018, event: 'Succession' }
+    ]
+  }
+];
+
+// Seed Applications
+const applications = [
+  {
+    id: 'MU-2026-0891',
+    applicant: 'Ananya Soren',
+    ulpin: 'JH-22-1048-0021',
+    type: 'Mutation',
+    reason: 'Registered sale or transfer',
+    submitted: '24 Sep 2026',
+    status: 'Under review',
+    department: 'Revenue Department',
+    priority: 'Normal',
+    step: 2,
+    notes: 'Sale deed attached and certified by registrar.'
+  },
+  {
+    id: 'MU-2026-0874',
+    applicant: 'Vikram Singh',
+    ulpin: 'JH-22-1048-0022',
+    type: 'Registration',
+    reason: 'Registered sale deed',
+    submitted: '20 Sep 2026',
+    status: 'Submitted',
+    department: 'Registration Department',
+    priority: 'High',
+    step: 1,
+    notes: 'Commercial plot transfer request.'
+  },
+  {
+    id: 'MU-2026-0812',
+    applicant: 'Meera Toppo',
+    ulpin: 'JH-22-1048-0023',
+    type: 'Correction of record',
+    reason: 'Correction of area entry',
+    submitted: '12 Sep 2026',
+    status: 'Approved',
+    department: 'GIS / Survey Circle',
+    priority: 'Normal',
+    step: 4,
+    notes: 'Boundary survey verified by GIS team.'
+  }
+];
+
+// Seed Documents
+const documents = [
+  {
+    id: 1,
+    name: 'Sale_Deed_2025.pdf',
+    type: 'Sale Deed',
+    ulpin: 'JH-22-1048-0021',
+    date: '24 Sep 2026',
+    status: 'Verified',
+    ocrData: {
+      seller: 'Somra Soren',
+      buyer: 'Ananya Soren',
+      surveyNo: '12/4',
+      area: '2.50 acres',
+      declaredValue: '₹25,00,000',
+      confidence: 94
+    }
+  },
+  {
+    id: 2,
+    name: 'RoR_2025_certified.pdf',
+    type: 'Record of Rights (Jamabandi)',
+    ulpin: 'JH-22-1048-0021',
+    date: '24 Sep 2026',
+    status: 'Verified',
+    ocrData: {
+      khataNo: '44',
+      khasraNo: '12/4',
+      owner: 'Ananya Soren',
+      confidence: 98
+    }
+  },
+  {
+    id: 3,
+    name: 'Identity_Proof_Aadhaar.pdf',
+    type: 'Identity Proof',
+    ulpin: 'JH-22-1048-0021',
+    date: '24 Sep 2026',
+    status: 'Verified',
+    ocrData: {
+      name: 'Ananya Soren',
+      verified: true
+    }
+  }
+];
+
+// Seed Conflicts
+const conflicts = [
+  {
+    id: 1,
+    ulpin: 'JH-22-1048-0021',
+    field: 'Recorded owner',
+    revenue_val: 'Ananya Soren',
+    registration_val: 'Somra Soren',
+    gis_val: 'No owner field recorded',
+    status: 'Conflict'
+  },
+  {
+    id: 2,
+    ulpin: 'JH-22-1048-0021',
+    field: 'Parcel area',
+    revenue_val: '2.50 acres',
+    registration_val: '2.50 acres',
+    gis_val: '2.72 acres',
+    status: 'Conflict'
+  }
+];
+
+// Seed Notifications
+const notifications = [
+  {
+    id: 1,
+    title: 'Application status update',
+    message: 'MU-2026-0891 is currently under review by the Circle Officer.',
+    time: '24 Sep 2026',
+    type: 'application',
+    unread: 1
+  },
+  {
+    id: 2,
+    title: 'Document verified',
+    message: 'Sale_Deed_2025.pdf has been verified via OCR cross-check.',
+    time: '23 Sep 2026',
+    type: 'verified',
+    unread: 1
+  },
+  {
+    id: 3,
+    title: 'Land Record update',
+    message: 'Jamabandi extract reference updated for ULPIN JH-22-1048-0021.',
+    time: '22 Sep 2026',
+    type: 'verified',
+    unread: 0
+  }
+];
+
+db.saveCollection('users', users);
+db.saveCollection('parcels', parcels);
+db.saveCollection('applications', applications);
+db.saveCollection('documents', documents);
+db.saveCollection('conflicts', conflicts);
+db.saveCollection('notifications', notifications);
+db.saveCollection('audit_logs', [
+  { id: 1, action: 'SEED_DATABASE', actor: 'System', target: 'bhuSETU DB', timestamp: new Date().toISOString() }
+]);
+
+console.log('✅ Database successfully seeded!');

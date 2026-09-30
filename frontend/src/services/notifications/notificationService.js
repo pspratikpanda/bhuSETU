@@ -1,4 +1,16 @@
 import { notifications } from '../../data/mockNotifications';
 
-// TODO: Connect to Socket.IO backend for real-time notifications.
-export const getNotifications = async () => notifications;
+const API_URL = '/api/v1/notifications';
+
+export const getNotifications = async () => {
+  try {
+    const res = await fetch(API_URL);
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && json.data) return json.data;
+    }
+  } catch (error) {
+    console.warn('Backend API unavailable, using local notification records:', error);
+  }
+  return notifications;
+};
