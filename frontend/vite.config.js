@@ -10,6 +10,14 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      // Socket.IO WebSocket proxy — ws: true enables WebSocket upgrade forwarding
+      '/socket.io': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+      },
     },
   },
 });
+
