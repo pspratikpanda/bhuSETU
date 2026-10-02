@@ -13,6 +13,13 @@
       "email": "officer@jharkhand.gov.in",
       "role": "Revenue Officer",
       "district": "Khunti"
+    },
+    {
+      "id": "USR-7170",
+      "name": "Rajesh Kumar Verma",
+      "email": "registrationofficer@jharkhand.gov.in",
+      "role": "Registration Officer",
+      "district": "Khunti"
     }
   ],
   "parcels": [
@@ -248,28 +255,7 @@
       "action": "SEED_DATABASE",
       "actor": "System",
       "target": "bhuSETU DB",
-      "timestamp": "2026-09-29T18:46:20.735Z"
-    },
-    {
-      "id": 1790752314247,
-      "action": "E_KYC_VERIFICATION_SUCCESS",
-      "actor": "Ananya Soren",
-      "target": "Aadhaar-KYC-5544",
-      "timestamp": "2026-09-30T07:11:54.247Z"
-    },
-    {
-      "id": 1790752497298,
-      "action": "OFFICER_DECISION_APPROVED",
-      "actor": "Rajesh Kumar Verma",
-      "target": "MU-2026-0891",
-      "timestamp": "2026-09-30T07:14:57.298Z"
-    },
-    {
-      "id": 1790756790819,
-      "action": "AI_OCR_DOCUMENT_PARSED",
-      "actor": "Ananya Soren",
-      "target": "Sale_Deed_2025.pdf",
-      "timestamp": "2026-09-30T08:26:30.819Z"
+      "timestamp": "2026-09-30T11:25:12.912Z"
     }
   ],
   "applications": [
@@ -280,12 +266,11 @@
       "type": "Mutation",
       "reason": "Registered sale or transfer",
       "submitted": "24 Sep 2026",
-      "status": "Approved",
+      "status": "Under review",
       "department": "Revenue Department",
       "priority": "Normal",
-      "step": 4,
-      "notes": "Sale deed attached and certified by registrar.",
-      "officerNotes": "Approved"
+      "step": 2,
+      "notes": "Sale deed attached and certified by registrar."
     },
     {
       "id": "MU-2026-0874",

@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { demoUsers } from '../../data/mockUsers';
 import { signIn, verifyEKYC } from '../../services/auth/authService';
 import { Badge, Brand, Button } from '../../components/ui';
+import { motion } from 'framer-motion';
 
 export function LoginPage() {
   const [authMethod, setAuthMethod] = useState('role');
@@ -35,7 +36,12 @@ export function LoginPage() {
 
   return (
     <div className="auth-page">
-      <aside className="auth-aside">
+      <motion.aside 
+        initial={{ opacity: 0, x: -50 }} 
+        animate={{ opacity: 1, x: 0 }} 
+        transition={{ duration: 0.6, ease: "easeOut" }} 
+        className="auth-aside"
+      >
         <Brand />
         <div className="auth-aside-copy">
           <span className="eyebrow">ONE RECORD. MANY SERVICES.</span>
@@ -52,8 +58,13 @@ export function LoginPage() {
         </div>
         <div className="auth-orb auth-orb-one" />
         <div className="auth-orb auth-orb-two" />
-      </aside>
-      <main className="auth-main">
+      </motion.aside>
+      <motion.main 
+        initial={{ opacity: 0, x: 50 }} 
+        animate={{ opacity: 1, x: 0 }} 
+        transition={{ duration: 0.5, delay: 0.1, type: "spring", stiffness: 100, damping: 20 }} 
+        className="auth-main"
+      >
         <div className="auth-card">
           <div className="auth-mobile-brand"><Brand /></div>
           <span className="eyebrow">WELCOME TO BHU SETU</span>
@@ -167,7 +178,7 @@ export function LoginPage() {
         <div className="auth-legal">
           By continuing, you agree to the <a href="#terms">Terms of use</a> and <a href="#privacy">Privacy notice</a>.
         </div>
-      </main>
+      </motion.main>
     </div>
   );
 }
@@ -175,7 +186,12 @@ export function LoginPage() {
 export function RegisterPage() {
   return (
     <div className="auth-page">
-      <aside className="auth-aside">
+      <motion.aside 
+        initial={{ opacity: 0, x: -50 }} 
+        animate={{ opacity: 1, x: 0 }} 
+        transition={{ duration: 0.6, ease: "easeOut" }} 
+        className="auth-aside"
+      >
         <Brand />
         <div className="auth-aside-copy">
           <span className="eyebrow">CITIZEN SERVICES</span>
@@ -186,8 +202,13 @@ export function RegisterPage() {
           <span>BHARAT · JHARKHAND</span>
           <span>SIH-26014 · AUTH ENGINE</span>
         </div>
-      </aside>
-      <main className="auth-main">
+      </motion.aside>
+      <motion.main 
+        initial={{ opacity: 0, x: 50 }} 
+        animate={{ opacity: 1, x: 0 }} 
+        transition={{ duration: 0.5, delay: 0.1, type: "spring", stiffness: 100, damping: 20 }} 
+        className="auth-main"
+      >
         <div className="auth-card">
           <div className="auth-mobile-brand"><Brand /></div>
           <span className="eyebrow">GET STARTED</span>
@@ -203,7 +224,7 @@ export function RegisterPage() {
           <Button className="auth-submit" icon={ArrowRight}>Create Profile</Button>
           <div className="auth-register">Already have access? <Link to="/login">Sign in <ArrowRight size={14} /></Link></div>
         </div>
-      </main>
+      </motion.main>
     </div>
   );
 }

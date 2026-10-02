@@ -47,4 +47,18 @@
 
 ---
 
-## Step 5: Socket.IO WebSocket Engine & Event Bus (UP NEXT)
+## Step 5: Socket.IO WebSocket Engine & Event Bus (✅ COMPLETED)
+
+- **Socket.IO Engine Setup**: Initialized Socket.IO v4 server on backend HTTP server in `backend/src/socket/socketManager.js`.
+- **Event Bus Channels**: Created real-time channels for `notification:new`, `application:status_changed`, `officer:queue_updated`, and `ocr:result_ready`.
+- **Frontend Real-time Sync**: Built `frontend/src/services/socket/socketService.js` and `useSocket` React hook connecting `NotificationsPage`, header notification bell, and officer work queues to live WebSockets.
+
+---
+
+## Step 6: Cloud Infrastructure, Security Hardening & CI/CD (✅ COMPLETED)
+
+- **Docker Containerization**: Created production multi-stage Dockerfiles (`backend/Dockerfile`, `frontend/Dockerfile`) and container orchestration setup (`docker-compose.yml`).
+- **Nginx Reverse Proxy**: Configured `frontend/nginx.conf` for SPA routing fallback, static asset caching, and reverse proxying `/api/` REST and `/socket.io/` WebSockets to backend container.
+- **Security Hardening**: Implemented HTTP security headers (`helmet`) and DDoS/brute-force rate limiting (`express-rate-limit`) in `backend/src/server.js`.
+- **CI/CD Automation**: Created GitHub Actions workflow `.github/workflows/ci.yml` for automated frontend builds, backend health checks, and Docker container build tests.
+
