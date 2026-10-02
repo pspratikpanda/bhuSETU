@@ -21,11 +21,12 @@ let socket = null;
  * Safe to call multiple times — returns existing socket if already connected.
  */
 export function connectSocket() {
-  if (socket && socket.connected) return socket;
+  if (socket) return socket;
 
   const token = localStorage.getItem(TOKEN_KEY) || '';
+  const socketUrl = import.meta.env.VITE_SOCKET_URL || (import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, '') : '/');
 
-  socket = io('/', {
+  socket = io(socketUrl, {
     auth: { token },
     transports: ['websocket', 'polling'],
     reconnectionAttempts: 10,

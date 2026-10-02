@@ -11,6 +11,7 @@
   "dependencies": {
     "@vitejs/plugin-react": "latest",
     "axios": "latest",
+    "framer-motion": "^13.5.0",
     "leaflet": "latest",
     "lucide-react": "latest",
     "react": "latest",

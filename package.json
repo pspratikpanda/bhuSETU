@@ -1,0 +1,15 @@
+{
+  "name": "bhu-setu-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "bhuSETU Monorepo Root Workspace",
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail -n \"backend,frontend\" -c \"cyan,magenta\" \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "build": "npm run build --prefix frontend",
+    "seed": "npm run seed --prefix backend",
+    "start": "concurrently -n \"backend,frontend\" -c \"cyan,magenta\" \"npm start --prefix backend\" \"npm run preview --prefix frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

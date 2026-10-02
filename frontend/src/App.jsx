@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import { getCurrentUser } from './services/auth/authService';
 import { LoginPage, RegisterPage } from './pages/auth/AuthPages';
+import LandingPage from './pages/common/LandingPage';
 import CitizenDashboard from './pages/citizen/CitizenDashboard';
 import { ApplicationsPage, ApplicationDetailPage, ApplyPage, CitizenLandPage, DocumentsPage, ProfilePage } from './pages/citizen/CitizenPages';
 import OfficerDashboard from './pages/officer/OfficerDashboard';
@@ -22,7 +23,7 @@ const shared = (node) => <SharedPage>{node}</SharedPage>;
 export default function App() {
   const user = getCurrentUser();
   return <Routes>
-    <Route path="/" element={<Navigate to="/login" replace />} />
+    <Route path="/" element={<LandingPage />} />
     <Route path="/login" element={<LoginPage />} /><Route path="/register" element={<RegisterPage />} />
     <Route path="/citizen/dashboard" element={citizen(<CitizenDashboard user={user} />)} />
     <Route path="/citizen/land" element={citizen(<CitizenLandPage />)} />

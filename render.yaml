@@ -1,0 +1,43 @@
+services:
+  # 1. Backend REST API & Socket.IO WebSockets Server
+  - type: web
+    name: bhusetu-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        value: bhusetu_sih2026_student_hackathon_jwt_secret
+      - key: CORS_ORIGIN
+        value: "*"
+
+  # 2. Frontend React SPA Application
+  - type: web
+    name: bhusetu-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    plan: free
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: bhusetu-backend
+          property: url
+          suffix: /api/v1
+      - key: VITE_SOCKET_URL
+        fromService:
+          type: web
+          name: bhusetu-backend
+          property: url

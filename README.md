@@ -31,18 +31,32 @@ docs/           Architecture, API, data, GIS, AI and contribution plans
 
 UI pages call service modules; service modules currently return local mock data and isolate the future API integration point. Mock records live under `frontend/src/data`. This is JavaScript-only: React components use `.jsx`, modules use `.js`; no TypeScript configuration or source files are used.
 
-## Local setup
+## Local setup & Docker deployment
 
+### Option A: Running with Docker Compose (Recommended)
+```bash
+# Build and launch both frontend (port 8080) and backend (port 5000) containers:
+docker compose up --build -d
+```
+Access the application at `http://localhost:8080` (Frontend) and API healthcheck at `http://localhost:5000/api/v1/health`.
+
+### Option B: Running Manually
 Requirements: Node.js 20+ and npm.
 
+1. **Backend Server**:
+```bash
+cd backend
+npm install
+npm run seed  # Seed initial database
+npm run dev   # Runs backend REST API & Socket.IO server on port 5000
+```
+
+2. **Frontend Application**:
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local
-npm run dev
+npm run dev   # Runs Vite dev server on port 5173 (proxies /api & /socket.io to port 5000)
 ```
-
-Open the local URL printed by Vite. The demo can also be built with `npm run build` and previewed with `npm run preview`.
 
 ## Environment variables
 

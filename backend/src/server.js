@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { createServer } from 'http';
 import { initDatabase, db } from './db/database.js';
 import { initSocketManager } from './socket/socketManager.js';
@@ -17,11 +19,27 @@ import ocrRoutes from './routes/ocr.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
+
+// Security & Hardening Middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled CSP header to allow local dev assets & inline scripts if needed
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
+
+// Rate limiting: Limit requests to 300 per 15 minutes per IP
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  message: { error: 'Too many requests from this IP, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', apiLimiter);
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // Initialize Database & Seed initial data if empty
 initDatabase();

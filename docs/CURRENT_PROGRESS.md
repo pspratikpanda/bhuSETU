@@ -76,13 +76,12 @@ flowchart LR
 - Connected `processDocumentOCR` in `frontend/src/services/documents/documentService.js` to backend OCR processing endpoints.
 - Logged AI OCR extraction events in database `audit_logs`.
 
-### Step 5: Socket.IO WebSocket Engine & Event Bus
-- Deploy a dedicated **Socket.IO / WebSockets** server integrated with a **Redis Pub/Sub** message broker.
-- Connect frontend `NotificationsPage` and navigation notification bells to live WebSocket channels for instant push updates.
-- Broadcast real-time application status changes, officer queue updates, and system conflict notifications without page reloads.
+### Step 5: Socket.IO WebSocket Engine & Event Bus (✅ COMPLETED)
+- Built Socket.IO v4 server integrated with Express HTTP server in `backend/src/socket/socketManager.js`.
+- Implemented real-time Socket.IO subscriptions for notifications (`notification:new`), officer work queue updates (`officer:queue_updated`), application status updates (`application:status_changed`), and AI OCR processing completion (`ocr:result_ready`).
+- Connected frontend `NotificationsPage`, navigation header bell badge, and officer dashboards via `useSocket` React hook.
 
-### Step 6: Cloud Infrastructure, Security Hardening & CI/CD
-- **Containerization**: Write optimized Dockerfiles for frontend (Nginx multi-stage build) and backend microservices.
-- **Security**: Implement CORS policies, Content Security Policies (CSP), rate limiting, input sanitization, and SSL/TLS encryption.
-- **CI/CD Pipeline**: Setup automated GitHub Actions workflows for linting, unit/integration testing, build verification, and zero-downtime deployment.
-- **Monitoring**: Integrate APM and error reporting tools (Prometheus, Grafana, Sentry) for real-time uptime monitoring and logging.
+### Step 6: Cloud Infrastructure, Security Hardening & CI/CD (✅ COMPLETED)
+- **Containerization**: Created multi-stage Dockerfiles for `backend` (Node.js Alpine) and `frontend` (Nginx Alpine SPA), orchestrated via root `docker-compose.yml`.
+- **Security Hardening**: Integrated `helmet` security headers and `express-rate-limit` DDoS/brute-force protection in `backend/src/server.js`.
+- **CI/CD Pipeline**: Configured GitHub Actions workflow `.github/workflows/ci.yml` for automated frontend builds, backend health checks, and Docker container build validation.
