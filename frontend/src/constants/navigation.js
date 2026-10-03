@@ -13,6 +13,7 @@ export const officerLinks = [
   { label: 'Document review', to: '/officer/documents', icon: FileCheck2 },
   { label: 'Data conflicts', to: '/officer/conflicts', icon: FolderKanban },
   { label: 'Analytics', to: '/officer/analytics', icon: ChartNoAxesCombined },
+  { label: 'Audit Trail', to: '/officer/audit', icon: Activity },
 ];
 
 export const commonLinks = [

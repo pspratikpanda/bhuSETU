@@ -256,6 +256,111 @@
       "actor": "System",
       "target": "bhuSETU DB",
       "timestamp": "2026-09-30T11:25:12.912Z"
+    },
+    {
+      "id": 1791007749265,
+      "action": "CREATE_MUTATION_APPLICATION",
+      "actor": "Ananya Soren",
+      "target": "MU-2026-6418",
+      "timestamp": "2026-10-03T06:09:09.265Z"
+    },
+    {
+      "id": 1791008327554,
+      "action": "CREATE_MUTATION_APPLICATION",
+      "actor": "Ananya Soren",
+      "target": "MU-2026-4755",
+      "timestamp": "2026-10-03T06:18:47.554Z"
+    },
+    {
+      "id": 1791008493179,
+      "action": "CREATE_MUTATION_APPLICATION",
+      "actor": "Ananya Soren",
+      "target": "MU-2026-4801",
+      "timestamp": "2026-10-03T06:21:33.179Z"
+    },
+    {
+      "id": 1791009106452,
+      "action": "OFFICER_DECISION_APPROVED",
+      "actor": "Rajesh Kumar Verma",
+      "target": "MU-2026-0891",
+      "timestamp": "2026-10-03T06:31:46.452Z"
+    },
+    {
+      "id": 1791009109580,
+      "action": "OFFICER_DECISION_APPROVED",
+      "actor": "Rajesh Kumar Verma",
+      "target": "MU-2026-0891",
+      "timestamp": "2026-10-03T06:31:49.580Z"
+    },
+    {
+      "id": 1791009110428,
+      "action": "OFFICER_DECISION_RETURNED_FOR_CORRECTION",
+      "actor": "Rajesh Kumar Verma",
+      "target": "MU-2026-0891",
+      "timestamp": "2026-10-03T06:31:50.428Z"
+    },
+    {
+      "id": 1791009111428,
+      "action": "OFFICER_DECISION_APPROVED",
+      "actor": "Rajesh Kumar Verma",
+      "target": "MU-2026-0891",
+      "timestamp": "2026-10-03T06:31:51.428Z"
+    },
+    {
+      "id": 1791009418678,
+      "action": "OFFICER_DECISION_APPROVED",
+      "actor": "Rajesh Kumar Verma",
+      "target": "MU-2026-0891",
+      "timestamp": "2026-10-03T06:36:58.678Z"
+    },
+    {
+      "id": 1791009419428,
+      "action": "OFFICER_DECISION_APPROVED",
+      "actor": "Rajesh Kumar Verma",
+      "target": "MU-2026-0891",
+      "timestamp": "2026-10-03T06:36:59.428Z"
+    },
+    {
+      "id": 1791009419644,
+      "action": "OFFICER_DECISION_APPROVED",
+      "actor": "Rajesh Kumar Verma",
+      "target": "MU-2026-0891",
+      "timestamp": "2026-10-03T06:36:59.644Z"
+    },
+    {
+      "id": 1791009420175,
+      "action": "OFFICER_DECISION_RETURNED_FOR_CORRECTION",
+      "actor": "Rajesh Kumar Verma",
+      "target": "MU-2026-0891",
+      "timestamp": "2026-10-03T06:37:00.175Z"
+    },
+    {
+      "id": 1791009420941,
+      "action": "OFFICER_DECISION_APPROVED",
+      "actor": "Rajesh Kumar Verma",
+      "target": "MU-2026-0891",
+      "timestamp": "2026-10-03T06:37:00.941Z"
+    },
+    {
+      "id": 1791009438865,
+      "action": "OFFICER_DECISION_APPROVED",
+      "actor": "Rajesh Kumar Verma",
+      "target": "MU-2026-4801",
+      "timestamp": "2026-10-03T06:37:18.865Z"
+    },
+    {
+      "id": 1791020725213,
+      "action": "CREATE_MUTATION_APPLICATION",
+      "actor": "Ananya Soren",
+      "target": "MU-2026-6743",
+      "timestamp": "2026-10-03T09:45:25.213Z"
+    },
+    {
+      "id": 1791020773137,
+      "action": "OFFICER_DECISION_APPROVED",
+      "actor": "Rajesh Kumar Verma",
+      "target": "MU-2026-6743",
+      "timestamp": "2026-10-03T09:46:13.137Z"
     }
   ],
   "applications": [
@@ -266,11 +371,12 @@
       "type": "Mutation",
       "reason": "Registered sale or transfer",
       "submitted": "24 Sep 2026",
-      "status": "Under review",
+      "status": "Approved",
       "department": "Revenue Department",
       "priority": "Normal",
-      "step": 2,
-      "notes": "Sale deed attached and certified by registrar."
+      "step": 4,
+      "notes": "Sale deed attached and certified by registrar.",
+      "officerNotes": "Approved"
     },
     {
       "id": "MU-2026-0874",
@@ -297,6 +403,61 @@
       "priority": "Normal",
       "step": 4,
       "notes": "Boundary survey verified by GIS team."
+    },
+    {
+      "id": "MU-2026-6418",
+      "applicant": "Ananya Soren",
+      "ulpin": "JH-22-1048-0021",
+      "type": "Mutation",
+      "reason": "Gift or family transfer",
+      "submitted": "03 Oct 2026",
+      "status": "Submitted",
+      "department": "Revenue Department",
+      "priority": "Normal",
+      "step": 1,
+      "notes": ""
+    },
+    {
+      "id": "MU-2026-4755",
+      "applicant": "Ananya Soren",
+      "ulpin": "JH-22-1048-0021",
+      "type": "Mutation",
+      "reason": "Registered sale or transfer",
+      "submitted": "03 Oct 2026",
+      "status": "Submitted",
+      "department": "Revenue Department",
+      "priority": "Normal",
+      "step": 1,
+      "notes": ""
+    },
+    {
+      "id": "MU-2026-4801",
+      "applicant": "Ananya Soren",
+      "ulpin": "JH-22-1048-0021",
+      "type": "Mutation",
+      "reason": "Registered sale or transfer",
+      "submitted": "03 Oct 2026",
+      "status": "Approved",
+      "department": "Revenue Department",
+      "priority": "Normal",
+      "step": 4,
+      "notes": "",
+      "officerNotes": "Approved"
+    },
+    {
+      "id": "MU-2026-6743",
+      "applicant": "Ananya Soren",
+      "applicantId": "USR-001",
+      "ulpin": "JH-22-1048-0022",
+      "type": "Mutation",
+      "reason": "Inheritance or succession",
+      "submitted": "03 Oct 2026",
+      "status": "Approved",
+      "department": "Revenue Department",
+      "priority": "Normal",
+      "step": 4,
+      "notes": "",
+      "officerNotes": "Approved"
     }
   ]
 }
