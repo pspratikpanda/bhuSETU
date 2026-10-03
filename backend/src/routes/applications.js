@@ -38,6 +38,7 @@ router.post('/', authenticateToken, (req, res) => {
   const newApp = {
     id: `MU-2026-${Math.floor(1000 + Math.random() * 9000)}`,
     applicant: applicant || req.user?.name || 'Ananya Soren',
+    applicantId: req.user?.id, // Store ID to send socket notifications later
     ulpin: ulpin || 'JH-22-1048-0021',
     type: type || 'Mutation',
     reason: reason || 'Registered sale or transfer',
