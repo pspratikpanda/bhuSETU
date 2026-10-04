@@ -4,7 +4,8 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { createServer } from 'http';
-import { initDatabase, db } from './db/database.js';
+import { connectDB } from './db/postgres.js';
+import { initDatabase } from './db/initDb.js';
 import { initSocketManager } from './socket/socketManager.js';
 import authRoutes from './routes/auth.js';
 import parcelRoutes from './routes/parcels.js';
@@ -41,17 +42,11 @@ app.use('/api/', apiLimiter);
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Initialize Database & Seed initial data if empty
-initDatabase();
-if (db.getCollection('parcels').length === 0) {
-  import('./db/seed.js');
-}
-
 // Health Check
 app.get('/api/v1/health', (req, res) => {
   res.json({
     status: 'UP',
-    service: 'bhuSETU Backend API',
+    service: 'bhuSETU Backend API (PostgreSQL/PostGIS)',
     timestamp: new Date().toISOString(),
     websocket: 'Socket.IO v4 active',
   });
@@ -74,12 +69,19 @@ app.use((req, res) => {
 });
 
 // ── HTTP Server + Socket.IO ────────────────────────────────────────────────
-// Wrap Express app in http.createServer so Socket.IO can share the same port.
 const httpServer = createServer(app);
 initSocketManager(httpServer);
 
-httpServer.listen(PORT, () => {
-  console.log(`🚀 bhuSETU Backend Server running at http://localhost:${PORT}`);
-  console.log(`📡 Healthcheck available at http://localhost:${PORT}/api/v1/health`);
-  console.log(`🔌 Socket.IO WebSocket engine active on ws://localhost:${PORT}`);
-});
+// Connect to Postgres and Initialize Database Schema & Seed Data before listening
+async function startServer() {
+  await connectDB();
+  await initDatabase();
+
+  httpServer.listen(PORT, () => {
+    console.log(`🚀 bhuSETU Backend Server running at http://localhost:${PORT}`);
+    console.log(`📡 Healthcheck available at http://localhost:${PORT}/api/v1/health`);
+    console.log(`🔌 Socket.IO WebSocket engine active on ws://localhost:${PORT}`);
+  });
+}
+
+startServer();

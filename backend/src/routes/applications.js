@@ -1,4 +1,5 @@
 import express from 'express';
+import { query, isPgConnected } from '../db/postgres.js';
 import { db } from '../db/database.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { emitToOfficers, emitToUser } from '../socket/socketManager.js';
@@ -6,150 +7,171 @@ import { emitToOfficers, emitToUser } from '../socket/socketManager.js';
 const router = express.Router();
 
 // GET /api/v1/applications - get applications list
-router.get('/', (req, res) => {
-  const { status } = req.query;
-  let applications = db.getCollection('applications');
+router.get('/', async (req, res) => {
+  try {
+    const { status } = req.query;
 
-  if (status && status !== 'All') {
-    applications = applications.filter((app) =>
-      app.status.toLowerCase().includes(status.toLowerCase())
-    );
+    if (isPgConnected()) {
+      let sql = 'SELECT * FROM applications';
+      let params = [];
+      if (status && status !== 'All') {
+        sql += ' WHERE LOWER(status) LIKE $1';
+        params.push(`%${status.toLowerCase()}%`);
+      }
+      sql += ' ORDER BY id DESC';
+      const { rows } = await query(sql, params);
+      return res.json({ success: true, count: rows.length, data: rows });
+    }
+
+    let applications = db.getCollection('applications');
+    if (status && status !== 'All') {
+      applications = applications.filter((app) => app.status.toLowerCase().includes(status.toLowerCase()));
+    }
+    res.json({ success: true, count: applications.length, data: applications });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
-
-  res.json({ success: true, count: applications.length, data: applications });
 });
 
 // GET /api/v1/applications/:id
-router.get('/:id', (req, res) => {
-  const { id } = req.params;
-  const application = db.findOne('applications', (app) => app.id === id);
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  if (!application) {
-    return res.status(404).json({ success: false, message: 'Application not found' });
+    if (isPgConnected()) {
+      const { rows } = await query('SELECT * FROM applications WHERE id = $1', [id]);
+      if (rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Application not found' });
+      }
+      return res.json({ success: true, data: rows[0] });
+    }
+
+    const application = db.findOne('applications', (app) => app.id === id);
+    if (!application) {
+      return res.status(404).json({ success: false, message: 'Application not found' });
+    }
+    res.json({ success: true, data: application });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
-
-  res.json({ success: true, data: application });
 });
 
 // POST /api/v1/applications - submit new mutation application (Authenticated)
-router.post('/', authenticateToken, (req, res) => {
-  const { applicant, ulpin, type, reason, notes } = req.body;
+router.post('/', authenticateToken, async (req, res) => {
+  try {
+    const { applicant, ulpin, type, reason, notes } = req.body;
 
-  const newApp = {
-    id: `MU-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-    applicant: applicant || req.user?.name || 'Ananya Soren',
-    applicantId: req.user?.id, // Store ID to send socket notifications later
-    ulpin: ulpin || 'JH-22-1048-0021',
-    type: type || 'Mutation',
-    reason: reason || 'Registered sale or transfer',
-    submitted: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-    status: 'Submitted',
-    department: 'Revenue Department',
-    priority: 'Normal',
-    step: 1,
-    notes: notes || ''
-  };
+    const newApp = {
+      id: `MU-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      applicant: applicant || req.user?.name || 'Ananya Soren',
+      applicantId: req.user?.id,
+      ulpin: ulpin || 'JH-22-1048-0021',
+      type: type || 'Mutation',
+      reason: reason || 'Registered sale or transfer',
+      submitted: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      status: 'Submitted',
+      department: 'Revenue Department',
+      priority: 'Normal',
+      step: 1,
+      notes: notes || ''
+    };
 
-  db.insert('applications', newApp);
-  db.insert('audit_logs', {
-    id: Date.now(),
-    action: 'CREATE_MUTATION_APPLICATION',
-    actor: newApp.applicant,
-    target: newApp.id,
-    timestamp: new Date().toISOString()
-  });
+    let queueLength = 1;
 
-  // ── Real-time: notify all officers of new queue item ──────────────────────
-  const queueLength = db.getCollection('applications').filter(
-    (a) => a.status === 'Submitted'
-  ).length;
-  emitToOfficers('officer:queue_updated', {
-    queueLength,
-    newApplicationId: newApp.id,
-    applicant: newApp.applicant,
-    ulpin: newApp.ulpin,
-    timestamp: new Date().toISOString(),
-  });
-
-  // ── Real-time: notify submitting citizen via their private room ────────────
-  const userId = req.user?.id;
-  if (userId) {
-    emitToUser(userId, 'notification:new', {
-      id: `notif-${Date.now()}`,
-      type: 'application',
-      title: 'Application Submitted',
-      message: `Your mutation application ${newApp.id} has been submitted successfully.`,
-      timestamp: new Date().toISOString(),
-      unread: true,
-    });
-  }
-
-  res.status(201).json({ success: true, data: newApp });
-});
-
-// PATCH /api/v1/applications/:id/decision - officer review decision (RBAC: Officers & Admins only)
-router.patch(
-  '/:id/decision',
-  authenticateToken,
-  requireRole('Revenue Officer', 'Registration Officer', 'GIS / Survey Officer', 'Administrator'),
-  (req, res) => {
-    const { id } = req.params;
-    const { decision } = req.body;
-    const officerName = req.user?.name || 'Revenue Officer';
-
-    let newStatus = 'Under review';
-    let step = 2;
-    if (decision === 'Approved') {
-      newStatus = 'Approved';
-      step = 4;
-    } else if (decision === 'Returned for correction') {
-      newStatus = 'Rejected';
-      step = 3;
+    if (isPgConnected()) {
+      await query(
+        `INSERT INTO applications (id, applicant, ulpin, type, reason, submitted, status, department, priority, step, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [newApp.id, newApp.applicant, newApp.ulpin, newApp.type, newApp.reason, newApp.submitted, newApp.status, newApp.department, newApp.priority, newApp.step, newApp.notes]
+      );
+      await query(`INSERT INTO audit_logs (action, actor, target) VALUES ($1, $2, $3)`, ['CREATE_MUTATION_APPLICATION', newApp.applicant, newApp.id]);
+      const queueRes = await query("SELECT COUNT(*) FROM applications WHERE status = 'Submitted'");
+      queueLength = parseInt(queueRes.rows[0].count, 10);
+    } else {
+      db.insert('applications', newApp);
+      db.insert('audit_logs', { id: Date.now(), action: 'CREATE_MUTATION_APPLICATION', actor: newApp.applicant, target: newApp.id, timestamp: new Date().toISOString() });
+      queueLength = db.getCollection('applications').filter((a) => a.status === 'Submitted').length;
     }
 
-    const updated = db.update('applications', (app) => app.id === id, {
-      status: newStatus,
-      step,
-      officerNotes: decision
-    });
-
-    if (!updated) {
-      return res.status(404).json({ success: false, message: 'Application not found' });
-    }
-
-    db.insert('audit_logs', {
-      id: Date.now(),
-      action: `OFFICER_DECISION_${decision.toUpperCase().replace(/\s+/g, '_')}`,
-      actor: officerName,
-      target: id,
-      timestamp: new Date().toISOString()
-    });
-
-    // ── Real-time: broadcast status change globally (citizen + officers) ──────
-    emitToOfficers('application:status_changed', {
-      applicationId: id,
-      status: newStatus,
-      updatedBy: officerName,
+    emitToOfficers('officer:queue_updated', {
+      queueLength,
+      newApplicationId: newApp.id,
+      applicant: newApp.applicant,
+      ulpin: newApp.ulpin,
       timestamp: new Date().toISOString(),
     });
 
-    // Also emit to the applicant's room if we can identify them
-    const application = db.findOne('applications', (app) => app.id === id);
-    if (application?.applicantId) {
-      emitToUser(application.applicantId, 'notification:new', {
+    const userId = req.user?.id;
+    if (userId) {
+      emitToUser(userId, 'notification:new', {
         id: `notif-${Date.now()}`,
         type: 'application',
-        title: `Application ${newStatus}`,
-        message: `Your application ${id} status has been updated to: ${newStatus} by ${officerName}.`,
+        title: 'Application Submitted',
+        message: `Your mutation application ${newApp.id} has been submitted successfully.`,
         timestamp: new Date().toISOString(),
         unread: true,
       });
     }
 
-    res.json({ success: true, data: updated, reviewer: officerName });
+    res.status(201).json({ success: true, data: newApp });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PATCH /api/v1/applications/:id/decision - officer review decision
+router.patch(
+  '/:id/decision',
+  authenticateToken,
+  requireRole('Revenue Officer', 'Registration Officer', 'GIS / Survey Officer', 'Administrator'),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { decision } = req.body;
+      const officerName = req.user?.name || 'Revenue Officer';
+
+      let newStatus = 'Under review';
+      let step = 2;
+      if (decision === 'Approved') {
+        newStatus = 'Approved';
+        step = 4;
+      } else if (decision === 'Returned for correction') {
+        newStatus = 'Rejected';
+        step = 3;
+      }
+
+      let updated = null;
+
+      if (isPgConnected()) {
+        const { rows } = await query(
+          `UPDATE applications SET status = $1, step = $2, notes = COALESCE(notes, '') || $3 WHERE id = $4 RETURNING *`,
+          [newStatus, step, ` | Officer Decision: ${decision}`, id]
+        );
+        if (rows.length === 0) {
+          return res.status(404).json({ success: false, message: 'Application not found' });
+        }
+        updated = rows[0];
+        await query(`INSERT INTO audit_logs (action, actor, target) VALUES ($1, $2, $3)`, [`OFFICER_DECISION_${decision.toUpperCase().replace(/\s+/g, '_')}`, officerName, id]);
+      } else {
+        updated = db.update('applications', (app) => app.id === id, { status: newStatus, step, officerNotes: decision });
+        if (!updated) {
+          return res.status(404).json({ success: false, message: 'Application not found' });
+        }
+        db.insert('audit_logs', { id: Date.now(), action: `OFFICER_DECISION_${decision.toUpperCase().replace(/\s+/g, '_')}`, actor: officerName, target: id, timestamp: new Date().toISOString() });
+      }
+
+      emitToOfficers('application:status_changed', {
+        applicationId: id,
+        status: newStatus,
+        updatedBy: officerName,
+        timestamp: new Date().toISOString(),
+      });
+
+      res.json({ success: true, data: updated, reviewer: officerName });
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
   }
 );
 
 export default router;
-
-
