@@ -1,6 +1,5 @@
 import express from 'express';
-import { query, isPgConnected } from '../db/postgres.js';
-import { db } from '../db/database.js';
+import { query } from '../db/postgres.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { emitToOfficers, emitToUser } from '../socket/socketManager.js';
 
@@ -11,23 +10,15 @@ router.get('/', async (req, res) => {
   try {
     const { status } = req.query;
 
-    if (isPgConnected()) {
-      let sql = 'SELECT * FROM applications';
-      let params = [];
-      if (status && status !== 'All') {
-        sql += ' WHERE LOWER(status) LIKE $1';
-        params.push(`%${status.toLowerCase()}%`);
-      }
-      sql += ' ORDER BY id DESC';
-      const { rows } = await query(sql, params);
-      return res.json({ success: true, count: rows.length, data: rows });
-    }
-
-    let applications = db.getCollection('applications');
+    let sql = 'SELECT * FROM applications';
+    let params = [];
     if (status && status !== 'All') {
-      applications = applications.filter((app) => app.status.toLowerCase().includes(status.toLowerCase()));
+      sql += ' WHERE LOWER(status) LIKE $1';
+      params.push(`%${status.toLowerCase()}%`);
     }
-    res.json({ success: true, count: applications.length, data: applications });
+    sql += ' ORDER BY id DESC';
+    const { rows } = await query(sql, params);
+    res.json({ success: true, count: rows.length, data: rows });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -38,19 +29,11 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (isPgConnected()) {
-      const { rows } = await query('SELECT * FROM applications WHERE id = $1', [id]);
-      if (rows.length === 0) {
-        return res.status(404).json({ success: false, message: 'Application not found' });
-      }
-      return res.json({ success: true, data: rows[0] });
-    }
-
-    const application = db.findOne('applications', (app) => app.id === id);
-    if (!application) {
+    const { rows } = await query('SELECT * FROM applications WHERE id = $1', [id]);
+    if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Application not found' });
     }
-    res.json({ success: true, data: application });
+    res.json({ success: true, data: rows[0] });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -76,22 +59,14 @@ router.post('/', authenticateToken, async (req, res) => {
       notes: notes || ''
     };
 
-    let queueLength = 1;
-
-    if (isPgConnected()) {
-      await query(
-        `INSERT INTO applications (id, applicant, ulpin, type, reason, submitted, status, department, priority, step, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-        [newApp.id, newApp.applicant, newApp.ulpin, newApp.type, newApp.reason, newApp.submitted, newApp.status, newApp.department, newApp.priority, newApp.step, newApp.notes]
-      );
-      await query(`INSERT INTO audit_logs (action, actor, target) VALUES ($1, $2, $3)`, ['CREATE_MUTATION_APPLICATION', newApp.applicant, newApp.id]);
-      const queueRes = await query("SELECT COUNT(*) FROM applications WHERE status = 'Submitted'");
-      queueLength = parseInt(queueRes.rows[0].count, 10);
-    } else {
-      db.insert('applications', newApp);
-      db.insert('audit_logs', { id: Date.now(), action: 'CREATE_MUTATION_APPLICATION', actor: newApp.applicant, target: newApp.id, timestamp: new Date().toISOString() });
-      queueLength = db.getCollection('applications').filter((a) => a.status === 'Submitted').length;
-    }
+    await query(
+      `INSERT INTO applications (id, applicant, ulpin, type, reason, submitted, status, department, priority, step, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      [newApp.id, newApp.applicant, newApp.ulpin, newApp.type, newApp.reason, newApp.submitted, newApp.status, newApp.department, newApp.priority, newApp.step, newApp.notes]
+    );
+    await query(`INSERT INTO audit_logs (action, actor, target) VALUES ($1, $2, $3)`, ['CREATE_MUTATION_APPLICATION', newApp.applicant, newApp.id]);
+    const queueRes = await query("SELECT COUNT(*) FROM applications WHERE status = 'Submitted'");
+    const queueLength = parseInt(queueRes.rows[0].count, 10);
 
     emitToOfficers('officer:queue_updated', {
       queueLength,
@@ -140,25 +115,15 @@ router.patch(
         step = 3;
       }
 
-      let updated = null;
-
-      if (isPgConnected()) {
-        const { rows } = await query(
-          `UPDATE applications SET status = $1, step = $2, notes = COALESCE(notes, '') || $3 WHERE id = $4 RETURNING *`,
-          [newStatus, step, ` | Officer Decision: ${decision}`, id]
-        );
-        if (rows.length === 0) {
-          return res.status(404).json({ success: false, message: 'Application not found' });
-        }
-        updated = rows[0];
-        await query(`INSERT INTO audit_logs (action, actor, target) VALUES ($1, $2, $3)`, [`OFFICER_DECISION_${decision.toUpperCase().replace(/\s+/g, '_')}`, officerName, id]);
-      } else {
-        updated = db.update('applications', (app) => app.id === id, { status: newStatus, step, officerNotes: decision });
-        if (!updated) {
-          return res.status(404).json({ success: false, message: 'Application not found' });
-        }
-        db.insert('audit_logs', { id: Date.now(), action: `OFFICER_DECISION_${decision.toUpperCase().replace(/\s+/g, '_')}`, actor: officerName, target: id, timestamp: new Date().toISOString() });
+      const { rows } = await query(
+        `UPDATE applications SET status = $1, step = $2, notes = COALESCE(notes, '') || $3 WHERE id = $4 RETURNING *`,
+        [newStatus, step, ` | Officer Decision: ${decision}`, id]
+      );
+      if (rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Application not found' });
       }
+      const updated = rows[0];
+      await query(`INSERT INTO audit_logs (action, actor, target) VALUES ($1, $2, $3)`, [`OFFICER_DECISION_${decision.toUpperCase().replace(/\s+/g, '_')}`, officerName, id]);
 
       emitToOfficers('application:status_changed', {
         applicationId: id,

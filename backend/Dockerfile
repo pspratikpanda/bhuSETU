@@ -21,9 +21,8 @@ RUN addgroup -S bhusetu && adduser -S bhusetu -G bhusetu
 COPY --from=builder /app/node_modules ./node_modules
 COPY package*.json ./
 COPY src ./src
-COPY data ./data
 
-# Ensure data directory permissions
+# Ensure app directory permissions
 RUN chown -R bhusetu:bhusetu /app
 
 USER bhusetu

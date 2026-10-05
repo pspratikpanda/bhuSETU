@@ -74,13 +74,17 @@ initSocketManager(httpServer);
 
 // Connect to Postgres and Initialize Database Schema & Seed Data before listening
 async function startServer() {
-  await connectDB();
-  await initDatabase();
+  try {
+    await connectDB();
+    await initDatabase();
+  } catch (err) {
+    console.error('⚠️ Database init error (server will still start):', err.message);
+  }
 
-  httpServer.listen(PORT, () => {
-    console.log(`🚀 bhuSETU Backend Server running at http://localhost:${PORT}`);
-    console.log(`📡 Healthcheck available at http://localhost:${PORT}/api/v1/health`);
-    console.log(`🔌 Socket.IO WebSocket engine active on ws://localhost:${PORT}`);
+  httpServer.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 bhuSETU Backend Server running at http://0.0.0.0:${PORT}`);
+    console.log(`📡 Healthcheck available at http://0.0.0.0:${PORT}/api/v1/health`);
+    console.log(`🔌 Socket.IO WebSocket engine active on ws://0.0.0.0:${PORT}`);
   });
 }
 

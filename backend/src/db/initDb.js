@@ -1,130 +1,118 @@
-import { query, isPgConnected } from './postgres.js';
-import { initDatabase as initJsonDatabase, db } from './database.js';
+import { query } from './postgres.js';
 
 export async function initDatabase() {
-  if (!isPgConnected()) {
-    initJsonDatabase();
-    if (db.getCollection('parcels').length === 0) {
-      await import('./seed.js');
-    }
-    return;
-  }
-  try {
-    const schema = process.env.POSTGIS_SCHEMA || 'gis';
-    // 1. Create Dedicated GIS Schema & Enable PostGIS extension inside it
-    await query(`CREATE SCHEMA IF NOT EXISTS ${schema};`);
-    await query(`CREATE EXTENSION IF NOT EXISTS postgis SCHEMA ${schema};`);
+  const schema = process.env.POSTGIS_SCHEMA || 'gis';
 
-    // 2. Create Users Table
-    await query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id VARCHAR(100) PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL,
-        role VARCHAR(100) NOT NULL,
-        district VARCHAR(100),
-        kyc_status VARCHAR(50),
-        kyc_verified_at TIMESTAMP
-      );
-    `);
+  // 1. Create Dedicated GIS Schema & Enable PostGIS extension inside it
+  await query(`CREATE SCHEMA IF NOT EXISTS ${schema};`);
+  await query(`CREATE EXTENSION IF NOT EXISTS postgis SCHEMA ${schema};`);
 
-    // 3. Create Parcels Table
-    await query(`
-      CREATE TABLE IF NOT EXISTS parcels (
-        id SERIAL PRIMARY KEY,
-        ulpin VARCHAR(50) UNIQUE NOT NULL,
-        owner VARCHAR(255) NOT NULL,
-        area VARCHAR(50),
-        land_type VARCHAR(100),
-        location VARCHAR(255),
-        risk VARCHAR(50),
-        status VARCHAR(100),
-        current_use VARCHAR(100),
-        survey_number VARCHAR(100),
-        registered_value VARCHAR(100),
-        risk_scores JSONB,
-        ownership_history JSONB,
-        geom GEOMETRY(Polygon, 4326)
-      );
-    `);
+  // 2. Create Users Table
+  await query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id VARCHAR(100) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      role VARCHAR(100) NOT NULL,
+      district VARCHAR(100),
+      kyc_status VARCHAR(50),
+      kyc_verified_at TIMESTAMP
+    );
+  `);
 
-    // 4. Create Applications Table
-    await query(`
-      CREATE TABLE IF NOT EXISTS applications (
-        id VARCHAR(50) PRIMARY KEY,
-        applicant VARCHAR(255) NOT NULL,
-        ulpin VARCHAR(50) NOT NULL,
-        type VARCHAR(100) NOT NULL,
-        reason TEXT,
-        submitted VARCHAR(50),
-        status VARCHAR(100) NOT NULL,
-        department VARCHAR(255),
-        priority VARCHAR(50),
-        step INT DEFAULT 1,
-        notes TEXT
-      );
-    `);
+  // 3. Create Parcels Table
+  await query(`
+    CREATE TABLE IF NOT EXISTS parcels (
+      id SERIAL PRIMARY KEY,
+      ulpin VARCHAR(50) UNIQUE NOT NULL,
+      owner VARCHAR(255) NOT NULL,
+      area VARCHAR(50),
+      land_type VARCHAR(100),
+      location VARCHAR(255),
+      risk VARCHAR(50),
+      status VARCHAR(100),
+      current_use VARCHAR(100),
+      survey_number VARCHAR(100),
+      registered_value VARCHAR(100),
+      risk_scores JSONB,
+      ownership_history JSONB,
+      geom GEOMETRY(Polygon, 4326)
+    );
+  `);
 
-    // 5. Create Documents Table
-    await query(`
-      CREATE TABLE IF NOT EXISTS documents (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        type VARCHAR(100) NOT NULL,
-        ulpin VARCHAR(50) NOT NULL,
-        date VARCHAR(50),
-        status VARCHAR(50),
-        ocr_data JSONB
-      );
-    `);
+  // 4. Create Applications Table
+  await query(`
+    CREATE TABLE IF NOT EXISTS applications (
+      id VARCHAR(50) PRIMARY KEY,
+      applicant VARCHAR(255) NOT NULL,
+      ulpin VARCHAR(50) NOT NULL,
+      type VARCHAR(100) NOT NULL,
+      reason TEXT,
+      submitted VARCHAR(50),
+      status VARCHAR(100) NOT NULL,
+      department VARCHAR(255),
+      priority VARCHAR(50),
+      step INT DEFAULT 1,
+      notes TEXT
+    );
+  `);
 
-    // 6. Create Conflicts Table
-    await query(`
-      CREATE TABLE IF NOT EXISTS conflicts (
-        id SERIAL PRIMARY KEY,
-        ulpin VARCHAR(50) NOT NULL,
-        field VARCHAR(255) NOT NULL,
-        revenue_val TEXT,
-        registration_val TEXT,
-        gis_val TEXT,
-        status VARCHAR(50)
-      );
-    `);
+  // 5. Create Documents Table
+  await query(`
+    CREATE TABLE IF NOT EXISTS documents (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      type VARCHAR(100) NOT NULL,
+      ulpin VARCHAR(50) NOT NULL,
+      date VARCHAR(50),
+      status VARCHAR(50),
+      ocr_data JSONB
+    );
+  `);
 
-    // 7. Create Notifications Table
-    await query(`
-      CREATE TABLE IF NOT EXISTS notifications (
-        id SERIAL PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        message TEXT NOT NULL,
-        time VARCHAR(50),
-        type VARCHAR(50),
-        unread INT DEFAULT 1
-      );
-    `);
+  // 6. Create Conflicts Table
+  await query(`
+    CREATE TABLE IF NOT EXISTS conflicts (
+      id SERIAL PRIMARY KEY,
+      ulpin VARCHAR(50) NOT NULL,
+      field VARCHAR(255) NOT NULL,
+      revenue_val TEXT,
+      registration_val TEXT,
+      gis_val TEXT,
+      status VARCHAR(50)
+    );
+  `);
 
-    // 8. Create Audit Logs Table
-    await query(`
-      CREATE TABLE IF NOT EXISTS audit_logs (
-        id SERIAL PRIMARY KEY,
-        action VARCHAR(255) NOT NULL,
-        actor VARCHAR(255),
-        target VARCHAR(255),
-        timestamp TIMESTAMPTZ DEFAULT NOW()
-      );
-    `);
+  // 7. Create Notifications Table
+  await query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id SERIAL PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      message TEXT NOT NULL,
+      time VARCHAR(50),
+      type VARCHAR(50),
+      unread INT DEFAULT 1
+    );
+  `);
 
-    console.log('✅ PostgreSQL Tables and PostGIS extension verified/created.');
+  // 8. Create Audit Logs Table
+  await query(`
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id SERIAL PRIMARY KEY,
+      action VARCHAR(255) NOT NULL,
+      actor VARCHAR(255),
+      target VARCHAR(255),
+      timestamp TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
 
-    // 9. Auto-seed initial data if users table is empty
-    const userCountRes = await query('SELECT COUNT(*) FROM users');
-    if (parseInt(userCountRes.rows[0].count, 10) === 0) {
-      console.log('🌱 Seeding initial PostgreSQL data...');
-      await seedDatabase();
-    }
-  } catch (err) {
-    console.error('❌ Database Initialization Warning:', err.message);
-    initJsonDatabase();
+  console.log('✅ PostgreSQL Tables and PostGIS extension verified/created.');
+
+  // 9. Auto-seed initial data if users table is empty
+  const userCountRes = await query('SELECT COUNT(*) FROM users');
+  if (parseInt(userCountRes.rows[0].count, 10) === 0) {
+    console.log('🌱 Seeding initial PostgreSQL data...');
+    await seedDatabase();
   }
 }
 
